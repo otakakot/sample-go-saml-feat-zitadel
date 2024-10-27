@@ -3,7 +3,6 @@ package zitadelx
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"github.com/zitadel/oidc/v3/pkg/oidc"
 	"github.com/zitadel/zitadel-go/v3/pkg/client"
@@ -39,20 +38,15 @@ func CreateProject(
 		return fmt.Errorf("add project: %w", err)
 	}
 
-	slog.Info(fmt.Sprintf("project: %+v", proj))
-
-	app, err := cli.ManagementService().AddSAMLApp(ctx, &management.AddSAMLAppRequest{
+	if _, err := cli.ManagementService().AddSAMLApp(ctx, &management.AddSAMLAppRequest{
 		ProjectId: proj.GetId(),
 		Name:      name,
 		Metadata: &management.AddSAMLAppRequest_MetadataXml{
 			MetadataXml: meta,
 		},
-	})
-	if err != nil {
+	}); err != nil {
 		return fmt.Errorf("add saml app: %w", err)
 	}
-
-	slog.Info(fmt.Sprintf("app: %+v", app))
 
 	return nil
 }
@@ -61,8 +55,6 @@ func CreateUser(
 	ctx context.Context,
 	email string,
 ) error {
-	slog.Info("start user creation ... ")
-
 	initial := client.DefaultServiceUserAuthentication("./machinekey/zitadel-admin-sa.json", oidc.ScopeOpenID, client.ScopeZitadelAPI())
 
 	cli, err := client.New(
@@ -89,8 +81,6 @@ func CreateUser(
 	if err != nil {
 		return fmt.Errorf("add human user: %w", err)
 	}
-
-	slog.Info(fmt.Sprintf("email: %s", email))
 
 	if _, err := cli.UserServiceV2().SetPassword(ctx, &user.SetPasswordRequest{
 		UserId: us.UserId,
